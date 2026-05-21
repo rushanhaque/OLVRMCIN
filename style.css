@@ -1299,7 +1299,8 @@ header.app-header {
 }
 
 .flower-btn:hover .petal {
-  border: 0.5px solid #ffffff;
+  background: linear-gradient(#4A5D43, #7D9475);
+  border: 0.5px solid #FFFFFF;
 }
 
 .flower-btn:hover .flower {
