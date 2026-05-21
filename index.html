@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oliver McInroy & Co. | Digital Catalogue</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome icons for a polished search interface -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Header bar (Hidden when printing) -->
+    <header class="app-header no-print">
+        <div class="header-left">
+            <span class="brand-logo-premium">LIGHTING PRODUCT CATALOGUE</span>
+        </div>
+        <div class="header-right">
+            <div class="search-minimal">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" class="search-input-minimal" placeholder="Search collection...">
+            </div>
+            <div class="language-selector">
+                <select id="langSelect" class="lang-select-minimal">
+                    <option value="en">EN</option>
+                    <option value="fr">FR</option>
+                    <option value="de">DE</option>
+                    <option value="es">ES</option>
+                </select>
+            </div>
+            <div class="header-actions">
+                <button id="presentationBtn" class="btn-action-minimal" title="Presentation Mode">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+                <button id="pdfBtn" class="btn-action-minimal" title="Export PDF">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Catalog Viewport Container -->
+    <main class="catalog-viewport" id="catalogViewport"></main>
+
+    <!-- Load the catalog data first -->
+    <script src="catalog_data.js"></script>
+    <script>
+        // Lightbox Modal State
+        let zoomLevel = 1;
+        let panX = 0;
+        let panY = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+
+        function openLightbox(src, alt) {
+            const lightbox = document.getElementById('imageLightbox');
+            const img = document.getElementById('lightboxImage');
+            img.src = src;
+            img.alt = alt;
+            lightbox.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            resetZoomState();
+        }
+
+        function closeLightbox(event) {
+            const lightbox = document.getElementById('imageLightbox');
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function updateImageTransform() {
+            const img = document.getElementById('lightboxImage');
+            img.style.transform = `scale(${zoomLevel}) translate(${panX / zoomLevel}px, ${panY / zoomLevel}px)`;
+        }
+
+        function zoomIn(event) {
+            if (event) event.stopPropagation();
+            if (zoomLevel < 4) {
+                zoomLevel += 0.5;
+                updateImageTransform();
+            }
+        }
+
+        function zoomOut(event) {
+            if (event) event.stopPropagation();
+            if (zoomLevel > 1) {
+                zoomLevel -= 0.5;
+                if (zoomLevel === 1) {
+                    panX = 0;
+                    panY = 0;
+                }
+                updateImageTransform();
+            }
+        }
+
+        function resetZoom(event) {
+            if (event) event.stopPropagation();
+            resetZoomState();
+        }
+
+        function resetZoomState() {
+            zoomLevel = 1;
+            panX = 0;
+            panY = 0;
+            updateImageTransform();
+            const img = document.getElementById('lightboxImage');
+            img.style.cursor = 'zoom-in';
+        }
+
+        // --- MULTILINGUAL DICTIONARIES ---
+        const translations = {
+            en: {
+                brandName: "OLIVER MCINROY & CO.",
+                headerLogo: "LIGHTING PRODUCT CATALOGUE",
+                searchPlaceholder: "Search collection...",
+                coverSignature: "Signature Collection",
+                coverBespokeCraft: "Bespoke Metal Craft",
+                coverEst: "Est. 1999",
+                coverTitleAmp: "&",
+                coverTagline: "Bespoke Lighting & Artisan Metal Craft",
+                coverEdition: "Product Catalogue — 2025 / 26",
+                coverSummary: "This is a demo of Digital Catalogue made by Rushan Haque for Oliver Mc Inroy & Co. Only few products are listed as of now ( for demonstration purposes ). Also note that the contact form at the end is not functional.",
+                coverEnquiry: "Enquiry",
+                coverWorkshop: "Workshop",
+                coverAddress: "Prem Nagar Industrial Area,<br>Kanth Road, Moradabad, India",
+                aboutTitle: "Brand History",
+                aboutHeading: "Our Heritage",
+                aboutSubtitle: "A Legacy of Craftsmanship",
+                aboutParagraph: "Established in 1999 and expertly managed by Mr. __________, Oliver McInroy & Co. has grown to become a premier manufacturer and exporter based in the Prem Nagar Industrial Area of Moradabad, India. We specialize in an expansive catalog of Colonial-style wooden furniture, exquisite marble inlay table tops, intricate EPNS (Electroplated Nickel Silver) handicrafts, and precision-tooled lighting fixtures. Every piece in our collection is meticulously hand-sculpted, cast, and finished by master artisans who have inherited these traditional skills through generations.",
+                infraTitle: "Company Scale",
+                infraHeading: "Infrastructure",
+                infraSubtitle: "Global Manufacturing Capacity",
+                infraFactories: "Factories",
+                infraEmployees: "Employees",
+                infraSqFt: "Sq Ft",
+                infraProdLines: "Production Lines",
+                infraContainer: "Container Capacity",
+                infraAnnualUnits: "Annual Units",
+                prodTitle: "Product Catalogue",
+                prodOrigin: "Origin",
+                prodOriginVal: "Moradabad, UP",
+                prodCollection: "Collection",
+                prodCollLiting: "Precision-Tooled Lighting",
+                prodCollMarble: "Marble Inlay & Wood",
+                prodCollColonial: "Colonial Furniture",
+                prodEnquire: "Enquire",
+                matTitle: "Capabilities",
+                matHeading: "Materials",
+                matSubtitle: "Categories",
+                matMetal: "Metal",
+                matMetalVal: "Brass, Aluminum, Stainless Steel and Mild Steel",
+                matStone: "Stone / Marble",
+                matStoneVal: "Alabaster, Banswara, Onyx, Parker White, Granite, Green Marble, Bidasar, Black Slate, Rock Crystals and Travertine etc.",
+                matGlass: "Glass",
+                matGlassVal: "Regular Glass, Cast Glass, Frosted Glass, Opal, Borosilicate, Soda Lime, Toughened Glass, Extra clear Antique Mirror, Colored Glass and Glass Crystals etc.",
+                matNatural: "Natural",
+                matNaturalVal: "Jute, Rattan, Natural Raffia, Wood and Leather etc.",
+                clientTitle: "Global Partners",
+                clientHeading: "Our Clients",
+                clientSubtitle: "Trusted by World's Leading Brands",
+                certTitle: "Compliance & Standards",
+                certHeading: "Certifications",
+                certSubtitle: "Committed to Quality and Safety",
+                contactTitle: "Get In Touch",
+                contactHeading: "Contact Us",
+                contactSubtitle: "Send Us an Enquiry",
+                contactLabelName: "Name",
+                contactLabelEmail: "Email",
+                contactLabelMessage: "Message",
+                contactPlaceholderName: "Your full name",
+                contactPlaceholderEmail: "your@email.com",
+                contactPlaceholderMsg: "Tell us about your requirements...",
+                contactSubmitBtn: "Send Enquiry",
+                contactWorkshop: "Workshop",
+                contactAddress: "Prem Nagar Industrial Area, Kanth Road, Moradabad, India",
+                pageLabel: "Page",
+                pageOfLabel: "of",
+                noResultsTitle: "No Products Found",
+                noResultsDesc: "We couldn't find any products matching your search criteria. Please try another search term.",
+                noResultsClear: "Clear Search",
+                statsMatched: "items matched",
+                statsShowing: "Showing",
+                statsItems: "items",
+                statsPage: "page",
+                statsPages: "pages"
+            },
+            fr: {
+                brandName: "OLIVER MCINROY & CO.",
+                headerLogo: "CATALOGUE DE PRODUITS D'ÉCLAIRAGE",
+                searchPlaceholder: "Rechercher dans la collection...",
+                coverSignature: "Collection Signature",
+                coverBespokeCraft: "Artisanat d'Art en Métal",
+                coverEst: "Fondé en 1999",
+                coverTitleAmp: "&",
+                coverTagline: "Luminaires sur Mesure & Métal d'Art",
+                coverEdition: "Catalogue de Produits — 2025 / 26",
+                coverSummary: "Fabricants et exportateurs de luminaires artisanaux, mobilier colonial, incrustations de marbre et argenterie EPNS — reconnus par les plus grandes marques d'hôtellerie et de design d'intérieur dans le monde entier depuis 1999.",
+                coverEnquiry: "Demande d'info",
+                coverWorkshop: "Atelier",
+                coverAddress: "Prem Nagar Industrial Area,<br>Kanth Road, Moradabad, Inde",
+                aboutTitle: "Histoire de la Marque",
+                aboutHeading: "Notre Héritage",
+                aboutSubtitle: "Une Tradition d'Artisanat",
+                aboutParagraph: "Établie en 1999 et dirigée avec expertise par M. Ajay Joneja, la maison Oliver McInroy & Co. est devenue un fabricant et exportateur de premier plan basé à Moradabad, en Inde. Nous sommes spécialisés dans une large gamme de meubles en bois de style colonial, de somptueux plateaux de table incrustés de marbre, d'objets d'art délicats en métal argenté (EPNS) et de luminaires façonnés de précision. Chaque pièce de notre collection est minutieusement sculptée à la main, coulée et finie par des maîtres artisans qui perpétuent ce savoir-faire de génération en génération.",
+                infraTitle: "Dimension de l'Entreprise",
+                infraHeading: "Infrastructure",
+                infraSubtitle: "Capacité de Production Globale",
+                infraFactories: "Usines",
+                infraEmployees: "Employés",
+                infraSqFt: "Pieds Carrés",
+                infraProdLines: "Lignes de Production",
+                infraContainer: "Capacité de Conteneurs",
+                infraAnnualUnits: "Unités Annuelles",
+                prodTitle: "Catalogue de Produits",
+                prodOrigin: "Origine",
+                prodOriginVal: "Moradabad, UP, Inde",
+                prodCollection: "Collection",
+                prodCollLiting: "Luminaires Façonnés de Précision",
+                prodCollMarble: "Incrustation de Marbre & Bois",
+                prodCollColonial: "Mobilier Colonial",
+                prodEnquire: "S'enquérir",
+                matTitle: "Savoir-faire",
+                matHeading: "Matériaux",
+                matSubtitle: "Catégories",
+                matMetal: "Métal",
+                matMetalVal: "Laiton, Aluminium, Acier Inoxydable et Acier Doux",
+                matStone: "Pierre / Marbre",
+                matStoneVal: "Albâtre, Banswara, Onyx, Parker White, Granit, Marbre Vert, Bidasar, Ardoise Noire, Cristaux de Roche et Travertin etc.",
+                matGlass: "Verre",
+                matGlassVal: "Verre Ordinaire, Verre Coulé, Verre Dépoli, Opale, Borosilicate, Silico-sodo-calcique, Verre Trempé, Miroir Antique extra clair, Verre Coloré et Cristaux de Verre etc.",
+                matNatural: "Naturel",
+                matNaturalVal: "Jute, Rotin, Raphia Naturel, Bois et Cuir etc.",
+                clientTitle: "Partenaires Globaux",
+                clientHeading: "Nos Clients",
+                clientSubtitle: "Partenaire de Confiance des Plus Grandes Marques",
+                certTitle: "Conformité & Normes",
+                certHeading: "Certifications",
+                certSubtitle: "Engagés pour la Qualité et la Sécurité",
+                contactTitle: "Nous Contacter",
+                contactHeading: "Contactez-nous",
+                contactSubtitle: "Envoyer une Demande",
+                contactLabelName: "Nom",
+                contactLabelEmail: "Email",
+                contactLabelMessage: "Message",
+                contactPlaceholderName: "Votre nom complet",
+                contactPlaceholderEmail: "votre@email.com",
+                contactPlaceholderMsg: "Décrivez-nous votre projet...",
+                contactSubmitBtn: "Envoyer la Demande",
+                contactWorkshop: "Atelier",
+                contactAddress: "Prem Nagar Industrial Area, Kanth Road, Moradabad, Inde",
+                pageLabel: "Page",
+                pageOfLabel: "sur",
+                noResultsTitle: "Aucun produit trouvé",
+                noResultsDesc: "Nous n'avons trouvé aucun produit correspondant à vos critères. Essayez un autre terme de recherche.",
+                noResultsClear: "Effacer la recherche",
+                statsMatched: "articles correspondants",
+                statsShowing: "Affichage de",
+                statsItems: "articles",
+                statsPage: "page",
+                statsPages: "pages"
+            },
+            de: {
+                brandName: "OLIVER MCINROY & CO.",
+                headerLogo: "BELEUCHTUNGS-PRODUKTKATALOG",
+                searchPlaceholder: "Kollektion durchsuchen...",
+                coverSignature: "Signature Kollektion",
+                coverBespokeCraft: "Maßgeschneiderte Metallkunst",
+                coverEst: "Gegr. 1999",
+                coverTitleAmp: "&",
+                coverTagline: "Exklusive Leuchten & Kunstschmiedearbeiten",
+                coverEdition: "Produktkatalog — 2025 / 26",
+                coverSummary: "Hersteller & Exporteure von handgefertigten Beleuchtungskörpern, Kolonialmöbeln, Marmor-Inlays & EPNS-Silberwaren — seit 1999 geschätzt von führenden Hotel- und Einrichtungsmarken weltweit.",
+                coverEnquiry: "Anfrage",
+                coverWorkshop: "Werkstatt",
+                coverAddress: "Prem Nagar Industrial Area,<br>Kanth Road, Moradabad, Indien",
+                aboutTitle: "Markengeschichte",
+                aboutHeading: "Unser Erbe",
+                aboutSubtitle: "Eine Tradition der Handwerkskunst",
+                aboutParagraph: "Gegründet im Jahr 1999 und kompetent geleitet von Herrn Ajay Joneja, hat sich Oliver McInroy & Co. zu einem führenden Hersteller und Exporteur mit Sitz im Industriegebiet Prem Nagar in Moradabad, Indien, entwickelt. Wir sind spezialisiert auf ein umfangreiches Portfolio an Holzmöbeln im Kolonialstil, erlesenen Marmor-Inlay-Tischplatten, filigranem EPNS-Kunsthandwerk (versilbertes Nickelsilber) und präzisionsgefertigten Leuchten. Jedes Stück unserer Kollektion wird von erfahrenen Kunsthandwerkern, die ihr über Generationen weitergegebenes Können einbringen, sorgfältig von Hand geformt, gegossen und veredelt.",
+                infraTitle: "Unternehmensgröße",
+                infraHeading: "Infrastruktur",
+                infraSubtitle: "Globale Produktionskapazität",
+                infraFactories: "Fabriken",
+                infraEmployees: "Mitarbeiter",
+                infraSqFt: "Quadratfuß",
+                infraProdLines: "Produktionslinien",
+                infraContainer: "Containerkapazität",
+                infraAnnualUnits: "Einheiten pro Jahr",
+                prodTitle: "Produktkatalog",
+                prodOrigin: "Herkunft",
+                prodOriginVal: "Moradabad, Indien",
+                prodCollection: "Kollektion",
+                prodCollLiting: "Präzisionsgefertigte Leuchten",
+                prodCollMarble: "Marmor-Inlay & Holz",
+                prodCollColonial: "Kolonialmöbel",
+                prodEnquire: "Anfragen",
+                matTitle: "Kompetenzen",
+                matHeading: "Materialien",
+                matSubtitle: "Kategorien",
+                matMetal: "Metall",
+                matMetalVal: "Messing, Aluminium, Edelstahl und Baustahl",
+                matStone: "Stein / Marmor",
+                matStoneVal: "Alabaster, Banswara, Onyx, Parker Weiß, Granit, Grüner Marmor, Bidasar, Schwarzer Schiefer, Bergkristalle und Travertin usw.",
+                matGlass: "Glas",
+                matGlassVal: "Normalglas, Gussglas, Mattglas, Opalglas, Borosilikatglas, Kalk-Natron-Glas, Einscheiben-Sicherheitsglas, extra-klarer Antikspiegel, farbiges Glas und Glaskristalle usw.",
+                matNatural: "Naturmaterialien",
+                matNaturalVal: "Jute, Rattan, natürlicher Bast, Holz und Leder usw.",
+                clientTitle: "Globale Partner",
+                clientHeading: "Unsere Kunden",
+                clientSubtitle: "Geschätzt von den weltweit führenden Marken",
+                certTitle: "Konformität & Standards",
+                certHeading: "Zertifikate",
+                certSubtitle: "Verpflichtung zu Qualität und Sicherheit",
+                contactTitle: "Kontakt",
+                contactHeading: "Kontaktieren Sie uns",
+                contactSubtitle: "Senden Sie eine Anfrage",
+                contactLabelName: "Name",
+                contactLabelEmail: "E-Mail",
+                contactLabelMessage: "Nachricht",
+                contactPlaceholderName: "Ihr vollständiger Name",
+                contactPlaceholderEmail: "ihre@email.com",
+                contactPlaceholderMsg: "Beschreiben Sie Ihre Anforderungen...",
+                contactSubmitBtn: "Anfrage senden",
+                contactWorkshop: "Werkstatt",
+                contactAddress: "Prem Nagar Industrial Area, Kanth Road, Moradabad, Indien",
+                pageLabel: "Seite",
+                pageOfLabel: "von",
+                noResultsTitle: "Keine Produkte gefunden",
+                noResultsDesc: "Wir konnten keine Produkte finden, die Ihren Suchkriterien entsprechen. Bitte versuchen Sie einen anderen Suchbegriff.",
+                noResultsClear: "Suche löschen",
+                statsMatched: "Artikel gefunden",
+                statsShowing: "Zeige",
+                statsItems: "Artikel",
+                statsPage: "Seite",
+                statsPages: "Seiten"
+            },
+            es: {
+                brandName: "OLIVER MCINROY & CO.",
+                headerLogo: "CATÁLOGO DE PRODUCTOS DE ILUMINACIÓN",
+                searchPlaceholder: "Buscar en la colección...",
+                coverSignature: "Colección Signature",
+                coverBespokeCraft: "Artesanía en Metal a Medida",
+                coverEst: "Est. 1999",
+                coverTitleAmp: "&",
+                coverTagline: "Iluminación Exclusiva y Metalistería Artesanal",
+                coverEdition: "Catálogo de Productos — 2025 / 26",
+                coverSummary: "Fabricantes y exportadores de accesorios de iluminación artesanales, muebles coloniales, incrustaciones de marbre y platería EPNS — en quienes confían las principales marcas de hostelería e interiorismo de todo el mundo desde 1999.",
+                coverEnquiry: "Consulta",
+                coverWorkshop: "Taller",
+                coverAddress: "Prem Nagar Industrial Area,<br>Kanth Road, Moradabad, India",
+                aboutTitle: "Historia de la Marca",
+                aboutHeading: "Nuestra Herencia",
+                aboutSubtitle: "Un Legado de Artesanía",
+                aboutParagraph: "Establecida en 1999 y dirigida de manera experta por el Sr. Ajay Joneja, Oliver McInroy & Co. has grown to become a premier manufacturer and exporter based in the Prem Nagar Industrial Area of Moradabad, India. We specialize in an expansive catalog of Colonial-style wooden furniture, exquisite marble inlay table tops, intricate EPNS (Electroplated Nickel Silver) handicrafts, and precision-tooled lighting fixtures. Every piece in our collection is meticulously hand-sculpted, cast, and finished by master artisans who have inherited these traditional skills through generations.",
+                infraTitle: "Dimensión de la Empresa",
+                infraHeading: "Infraestructura",
+                infraSubtitle: "Capacidad de Fabricación Global",
+                infraFactories: "Fábricas",
+                infraEmployees: "Empleados",
+                infraSqFt: "Pies Cuadrados",
+                infraProdLines: "Líneas de Producción",
+                infraContainer: "Capacidad de Conteneurs",
+                infraAnnualUnits: "Unidades Anuales",
+                prodTitle: "Catálogo de Productos",
+                prodOrigin: "Origen",
+                prodOriginVal: "Moradabad, India",
+                prodCollection: "Colección",
+                prodCollLiting: "Iluminación de Precisión",
+                prodCollMarble: "Incrustación de Mármol y Madera",
+                prodCollColonial: "Muebles Coloniales",
+                prodEnquire: "Consultar",
+                matTitle: "Capacidades",
+                matHeading: "Materiales",
+                matSubtitle: "Categorías",
+                matMetal: "Metal",
+                matMetalVal: "Latón, Aluminio, Acero Inoxidable y Acero Dulce",
+                matStone: "Piedra / Mármol",
+                matStoneVal: "Alabastro, Banswara, Ónix, Blanco Parker, Granito, Mármol Verde, Bidasar, Pizarra Negra, Cristales de Roca y Travertino, etc.",
+                matGlass: "Vidrio",
+                matGlassVal: "Vidrio Común, Vidrio Fundido, Vidrio Esmerilado, Opalescente, Borosilicato, Calcosódico, Vidrio Templado, Espejo Antiguo extra claro, Vidrio de Color y Cristales de Vidrio, etc.",
+                matNatural: "Natural",
+                matNaturalVal: "Yute, Ratán, Rafia Natural, Madera y Cuero, etc.",
+                clientTitle: "Socios Globales",
+                clientHeading: "Nuestros Clientes",
+                clientSubtitle: "Socio de Confianza de las Principales Marcas Mundiales",
+                certTitle: "Cumplimiento y Normas",
+                certHeading: "Certificaciones",
+                certSubtitle: "Comprometidos con la Calidad y la Seguridad",
+                contactTitle: "Contacto",
+                contactHeading: "Contáctenos",
+                contactSubtitle: "Envíenos una Consulta",
+                contactLabelName: "Nombre",
+                contactLabelEmail: "Email",
+                contactLabelMessage: "Mensaje",
+                contactPlaceholderName: "Su nombre completo",
+                contactPlaceholderEmail: "su@email.com",
+                contactPlaceholderMsg: "Cuéntenos sus requerimientos...",
+                contactSubmitBtn: "Enviar Consulta",
+                contactWorkshop: "Taller",
+                contactAddress: "Prem Nagar Industrial Area, Kanth Road, Moradabad, India",
+                pageLabel: "Página",
+                pageOfLabel: "de",
+                noResultsTitle: "No se encontraron productos",
+                noResultsDesc: "No pudimos encontrar ningún producto que coincida con sus criterios de búsqueda. Intente con otro término.",
+                noResultsClear: "Limpiar Búsqueda",
+                statsMatched: "artículos coincidentes",
+                statsShowing: "Mostrando",
+                statsItems: "artículos",
+                statsPage: "página",
+                statsPages: "páginas"
+            }
+        };
+
+        const productTranslations = {
+            fr: {
+                "OM-LITE-101": {
+                    name: "Lampe de Table Leaves",
+                    description: "Une sculpture d'inspiration organique ornée de feuilles de métal délicatement forgées à la main, finition feuille d'or antique. Posée sur un socle en marbre massif."
+                },
+                "OM-LITE-102": {
+                    name: "Lampe de Table Meshed",
+                    description: "Dotée d'un abat-jour délicat en maille de métal tissée qui projette des motifs d'ombres complexes et ambiants dans la pièce. Une pièce maîtresse de jour comme de nuit."
+                },
+                "OM-LITE-103": {
+                    name: "Suspension d'Extérieur en Laiton",
+                    description: "Fabriquée en laiton massif de forte épaisseur, spécialement traitée pour résister aux intempéries tout en développant une belle patine naturelle avec le temps. Boîtier élégant en verre transparent."
+                },
+                "OM-LITE-104": {
+                    name: "Suspension en Albâtre",
+                    description: "Soigneusement taillée dans de l'albâtre naturel de première qualité, créant une lueur chaleureuse et translucide qui met en valeur ses veines organiques uniques. Suspendue à une monture en laiton finition main."
+                },
+                "OM-LITE-105": {
+                    name: "Suspension Elysian",
+                    description: "Un luminaire suspendu épuré et contemporain associant du verre soufflé délicat à une monture haut de gamme. Parfait pour créer une ambiance subtile et sophistiquée dans les espaces modernes."
+                },
+                "OM-LITE-106": {
+                    name: "Lampe de Table en Cuir",
+                    description: "Gainée de cuir fin cousu main avec des accents en laiton massif. Dispose d'un abat-jour en lin de première qualité qui diffuse magnifiquement la lumière pour une sensation chaleureuse et accueillante."
+                },
+                "OM-LITE-107": {
+                    name: "Lampadaire Palm",
+                    description: "Un grand lampadaire majestueux mettant en valeur des palmes en laiton sculptées à la main. Apporte une touche de luxe exotique et une lueur dorée chaleureuse à n'importe quelle pièce."
+                },
+                "OM-LITE-108": {
+                    name: "Applique Murale Artisanale",
+                    description: "Un luminaire mural en métal fabriqué à la main et magnifiquement texturé qui joue avec l'ombre et la lumière. Finition soignée dans un ton antique chaleureux."
+                },
+                "OM-LITE-109": {
+                    name: "Lustre Artisanal",
+                    description: "Une pièce maîtresse magnifique avec des configurations à plusieurs niveaux de cristaux de verre artisanaux et d'une structure en métal antique. Allie grandeur classique et lignes contemporaines."
+                },
+                "OM-LITE-110": {
+                    name: "Applique Murale Cannelée",
+                    description: "Dotée d'un superbe corps en verre cannelé qui réfracte la lumière sur les surfaces, soutenu par une base en métal usinée avec précision. Un design classique raffiné pour les intérieurs modernes."
+                }
+            },
+            de: {
+                "OM-LITE-101": {
+                    name: "Tischleuchte Leaves",
+                    description: "Eine organisch inspirierte Skulptur mit filigranen, handgeschmiedeten Metallblättern in antikem Blattgold-Finish. Auf einem massiven Marmorsockel."
+                },
+                "OM-LITE-102": {
+                    name: "Tischleuchte Meshed",
+                    description: "Mit einem filigranen Metallgitterschirm, der kunstvolle, stimmungsvolle Schattenmuster in den Raum wirft. Ein Blickfang bei Tag und Nacht."
+                },
+                "OM-LITE-103": {
+                    name: "Außenhängeleuchte aus Messing",
+                    description: "Hergestellt aus schwerem, massivem Messing, speziell behandelt, um den Elementen zu trotzen, während es im Laufe der Zeit eine schöne natürliche Patina entwickelt. Elegantes Klarglasgehäuse."
+                },
+                "OM-LITE-104": {
+                    name: "Alabaster-Hängeleuchte",
+                    description: "Sorgfältig aus feinstem natürlichem Alabaster geschnitzt, erzeugt einen warmen, transluzenten Glanz, der die einzigartige organische Maserung hervorhebt. Aufgehängt an handveredelten Messingbeschlägen."
+                },
+                "OM-LITE-105": {
+                    name: "Hängeleuchte Elysian",
+                    description: "Eine elegante, zeitgemäße Hängeleuchte, die zartes mundgeblasenes Glas mit hochwertigen Beschlägen verbindet. Perfekt, um in modernen Räumen ein dezentes, aber anspruchsvolles Ambiente zu schaffen."
+                },
+                "OM-LITE-106": {
+                    name: "Leder-Tischleuchte",
+                    description: "Umhüllt von feinem, handgenähtem Leder mit Akzenten aus massivem Messing. Ausgestattet mit einem hochwertigen Leinenschirm, der das Licht wunderbar streut und für eine warme, einladende Atmosphäre sorgt."
+                },
+                "OM-LITE-107": {
+                    name: "Stehleuchte Palm",
+                    description: "Eine prachtvolle Stehleuchte mit handgearbeiteten Palmwedeln aus Messing. Bringt einen Hauch von exotischem Luxus und einen warmen goldenen Glanz in jeden Raum."
+                },
+                "OM-LITE-108": {
+                    name: "Handgefertigte Wandleuchte",
+                    description: "Eine wunderschön strukturierte, handgefertigte Wandleuchte aus Metall, die mit Licht und Schatten spielt. Kunstvoll in einem warmen, antiken Farbton veredelt."
+                },
+                "OM-LITE-109": {
+                    name: "Artisan Kronleuchter",
+                    description: "Ein prächtiges Prunkstück mit mehrstöckigen Konfigurationen aus handgefertigten Glaskristallen und einem antiken Metallrahmen. Verbindet klassische Erhabenheit mit zeitgenössischen Linien."
+                },
+                "OM-LITE-110": {
+                    name: "Geriffelte Wandleuchte",
+                    description: "Mit einem wunderschönen geriffelten Glaskörper, der das Licht auf Oberflächen bricht, getragen von einem präzisionsgefertigten Metallsockel. Ein klassisches Design, verfeinert für moderne Innenräume."
+                }
+            },
+            es: {
+                "OM-LITE-101": {
+                    name: "Lámpara de Mesa Leaves",
+                    description: "Una escultura de inspiración orgánica con hojas de metal delicadamente forjadas a mano, acabadas en pan de oro antiguo. Sobre una base de mármol macizo."
+                },
+                "OM-LITE-102": {
+                    name: "Lámpara de Mesa Meshed",
+                    description: "Presenta una delicada pantalla de malla metálica tejida que proyecta intrincados patrones de sombras ambientales en la habitación. Una pieza destacada tanto de día como de noche."
+                },
+                "OM-LITE-103": {
+                    name: "Colgante de Exterior de Latón",
+                    description: "Fabricado en latón macizo de gran calibre, tratado específicamente para resistir los elementos y desarrollar una hermosa pátina natural con el tiempo. Elegante carcasa de vidrio transparente."
+                },
+                "OM-LITE-104": {
+                    name: "Luz Colgante de Alabastro",
+                    description: "Meticulosamente tallada en alabastro natural de primera calidad, creando un brillo cálido y translúcido que resalta sus vetas orgánicas únicas. Suspendida de herrajes de latón acabados a mano."
+                },
+                "OM-LITE-105": {
+                    name: "Colgante Elysian",
+                    description: "Una luminaria colgante elegante y contemporánea que combina un delicado vidrio soplado con herrajes de primera calidad. Perfecta para crear un ambiente sutil pero sofisticado en espacios modernos."
+                },
+                "OM-LITE-106": {
+                    name: "Lámpara de Mesa de Cuero",
+                    description: "Revestida en fino cuero cosido a mano con detalles de latón macizo. Cuenta con una pantalla de lino de primera calidad que difunde la luz hermosamente para una sensación cálida y acogedora."
+                },
+                "OM-LITE-107": {
+                    name: "Lámpara de Pie Palm",
+                    description: "Una lámpara de pie espectacular que muestra hojas de palmera de latón esculpidas a mano. Aporta un toque de lujo exótico y un cálido brillo dorado a cualquier habitación."
+                },
+                "OM-LITE-108": {
+                    name: "Aplique de Pared Artesanal",
+                    description: "Una luminaria de pared de metal hecha a mano con una textura hermosa que juega con la luz y la sombra. Acabado experto en un tono antiguo y cálido."
+                },
+                "OM-LITE-109": {
+                    name: "Araña de Luces Artesanal",
+                    description: "Una magnífica pieza central que presenta configuraciones de varios niveles de cristaux de vidrio hechos a mano y una estructura de metal envejecido. Combina la grandeza clásica con líneas contemporáneas."
+                },
+                "OM-LITE-110": {
+                    name: "Aplique de Pared Estriado",
+                    description: "Presenta un impresionante cuerpo de vidrio estriado que refracta la luz en las superficies, sostenido por una base de metal labrada con precisión. Un diseño clásico refinado para interiores modernos."
+                }
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function t(key) {
+            return translations[currentLanguage]?.[key] || translations['en']?.[key] || key;
+        }
+
+        // --- PRESENTATION MODE CONTROLS ---
+        let isPresentationMode = false;
+        let currentPresentationPage = 0;
+
+        function enterPresentation() {
+            isPresentationMode = true;
+            document.body.classList.add('presentation-active');
+            
+            // Find closest page to current scroll position
+            const pages = document.querySelectorAll('.catalog-page');
+            let closestIndex = 0;
+            let minDistance = Infinity;
+            
+            pages.forEach((page, idx) => {
+                const rect = page.getBoundingClientRect();
+                const dist = Math.abs(rect.top);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestIndex = idx;
+                }
+            });
+            
+            currentPresentationPage = closestIndex;
+            updatePresentationView();
+            
+            // Toggle fullscreen
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.warn(`Fullscreen error: ${err.message}`);
+                });
+            }
+            
+            const btn = document.getElementById('presentationBtn');
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-compress"></i>';
+        }
+
+        function exitPresentation() {
+            isPresentationMode = false;
+            document.body.classList.remove('presentation-active');
+            
+            const pages = document.querySelectorAll('.catalog-page');
+            pages.forEach(page => {
+                page.classList.remove('presentation-current');
+                page.style.transform = '';
+                page.style.position = '';
+                page.style.top = '';
+                page.style.left = '';
+            });
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(err => {});
+            }
+            
+            const btn = document.getElementById('presentationBtn');
+            if (btn) btn.innerHTML = '<i class="fa-solid fa-expand"></i>';
+            
+            if (pages[currentPresentationPage]) {
+                pages[currentPresentationPage].scrollIntoView({ behavior: 'auto', block: 'center' });
+            }
+        }
+
+        function updatePresentationView() {
+            const pages = document.querySelectorAll('.catalog-page');
+            pages.forEach((page, idx) => {
+                if (idx === currentPresentationPage) {
+                    page.classList.add('presentation-current');
+                } else {
+                    page.classList.remove('presentation-current');
+                    page.style.transform = '';
+                    page.style.position = '';
+                    page.style.top = '';
+                    page.style.left = '';
+                }
+            });
+            
+            const presPageNum = document.getElementById('presPageNum');
+            if (presPageNum) {
+                presPageNum.textContent = `${currentPresentationPage + 1} / ${pages.length}`;
+            }
+            resizePresentationPage();
+        }
+
+        function nextPresentationPage() {
+            const pages = document.querySelectorAll('.catalog-page');
+            if (currentPresentationPage < pages.length - 1) {
+                currentPresentationPage++;
+                updatePresentationView();
+            }
+        }
+
+        function prevPresentationPage() {
+            if (currentPresentationPage > 0) {
+                currentPresentationPage--;
+                updatePresentationView();
+            }
+        }
+
+        function resizePresentationPage() {
+            if (!isPresentationMode) return;
+            const activePage = document.querySelector('.catalog-page.presentation-current');
+            if (!activePage) return;
+            
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            const pageWidth = 1122.5; 
+            const pageHeight = 793.7; 
+            
+            const scaleX = windowWidth / pageWidth;
+            const scaleY = windowHeight / pageHeight;
+            const scale = Math.min(scaleX, scaleY) * 0.95; 
+            
+            activePage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+            activePage.style.position = 'fixed';
+            activePage.style.top = '50%';
+            activePage.style.left = '50%';
+        }
+
+        function updateUIForLanguage() {
+            const brandLogo = document.querySelector('.brand-logo-premium');
+            if (brandLogo) brandLogo.textContent = t('headerLogo');
+            
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+            
+            document.title = `${t('brandName')} | Digital Catalogue`;
+        }
+
+        window.addEventListener('resize', resizePresentationPage);
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && isPresentationMode) {
+                exitPresentation();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (!isPresentationMode) return;
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextPresentationPage();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevPresentationPage();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                exitPresentation();
+            }
+        });
+
+        // Main Application Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const catalogViewport = document.getElementById('catalogViewport');
+            const statsLabel = document.getElementById('statsLabel');
+            
+            let currentFilteredItems = window.catalogData || [];
+            
+            // Render the catalog page list
+            function renderCatalog(items) {
+                catalogViewport.innerHTML = '';
+                
+                if (items.length === 0) {
+                    if (statsLabel) statsLabel.textContent = '0 items matched';
+                    catalogViewport.innerHTML = `
+                        <div class="no-results no-print">
+                            <h2 class="no-results-title">${t('noResultsTitle')}</h2>
+                            <p class="no-results-desc">${t('noResultsDesc')}</p>
+                            <button class="btn btn-primary" onclick="document.getElementById('searchInput').value = ''; document.getElementById('searchInput').dispatchEvent(new Event('input'));">${t('noResultsClear')}</button>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Group products 2 per landscape page side-by-side
+                const productPages = [];
+                for (let i = 0; i < items.length; i += 2) {
+                    productPages.push(items.slice(i, i + 2));
+                }
+                
+                const totalPages = productPages.length + 7; // Cover + About + Infra + Products + Materials + Clients + Certs + Contact
+                if (statsLabel) {
+                    statsLabel.textContent = `${t('statsShowing')} ${items.length} ${t('statsItems')} (${totalPages} ${totalPages > 1 ? t('statsPages') : t('statsPage')})`;
+                }
+                
+                // --- 1. RENDER COVER PAGE ---
+                const coverPage = document.createElement('div');
+                coverPage.className = 'catalog-page';
+                coverPage.innerHTML = `
+                    <div class="cover-page-layout">
+                        <div class="cover-hero-left">
+                            <img src="Images/Cover.jpeg" alt="${t('brandName')} – Cover" class="cover-hero-img">
+                            <div class="cover-hero-overlay"></div>
+                            <div class="cover-hero-caption">
+                                <span>${t('coverSignature')}</span>
+                                <span class="cover-hero-caption-sub">${t('coverBespokeCraft')}</span>
+                            </div>
+                        </div>
+                        <div class="cover-brand-right">
+                            <div class="cover-top-accent" style="margin-top: 30px;">
+                                <div class="cover-accent-line"></div>
+                                <span class="cover-year-badge">${t('coverEst')}</span>
+                                <div class="cover-accent-line"></div>
+                            </div>
+
+                            <div class="cover-brand-block">
+                                <h1 class="cover-title">Oliver McInroy <span class="cover-title-amp">${t('coverTitleAmp')}</span> Co.</h1>
+                                <div class="cover-tagline-divider"></div>
+                                <p class="cover-tagline">${t('coverTagline')}</p>
+                                <p class="cover-edition">${t('coverEdition')}</p>
+                            </div>
+
+                            <div class="cover-brand-summary">
+                                <p>${t('coverSummary')}</p>
+                            </div>
+
+                            <div class="cover-bottom-contact">
+                                <div class="cover-contact-col">
+                                    <h5>${t('coverEnquiry')}</h5>
+                                    <a href="mailto:info@olivermcinroy.com" class="contact-link"><i class="fa-solid fa-envelope"></i> info@olivermcinroy.com</a>
+                                    <a href="https://wa.me/919917078766" target="_blank" class="contact-link"><i class="fa-brands fa-whatsapp"></i> +91 9917078766</a>
+                                </div>
+                                <div class="cover-contact-col">
+                                    <h5>${t('coverWorkshop')}</h5>
+                                    <span class="contact-link"><i class="fa-solid fa-location-dot"></i> ${t('coverAddress')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer" style="position: absolute; bottom: 10px; right: 35px; margin: 0; padding: 0;">
+                        <span>${t('pageLabel')} 1 ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(coverPage);
+
+                // --- 2. RENDER ABOUT US PAGE ---
+                const aboutPage = document.createElement('div');
+                aboutPage.className = 'catalog-page';
+                aboutPage.innerHTML = `
+                    <div class="page-header">
+                        <span class="page-header-logo">${t('brandName')}</span>
+                        <span class="page-header-title">${t('aboutTitle')}</span>
+                    </div>
+                    <div class="brand-asset-content" style="padding-top: 10px;">
+                        <h2>${t('aboutHeading')}</h2>
+                        <div class="subtitle">${t('aboutSubtitle')}</div>
+                        <p style="max-width: 700px; font-size: 18px; line-height: 1.8; color: var(--text-secondary); margin-top: 20px;">
+                            ${t('aboutParagraph')}
+                        </p>
+                    </div>
+                    <div class="page-footer">
+                        <span>${t('pageLabel')} 2 ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(aboutPage);
+                
+                // --- 2.5 RENDER INFRASTRUCTURE PAGE ---
+                const infraPage = document.createElement('div');
+                infraPage.className = 'catalog-page';
+                infraPage.innerHTML = `
+                    <div class="page-header">
+                        <span class="page-header-logo">${t('brandName')}</span>
+                        <span class="page-header-title">${t('infraTitle')}</span>
+                    </div>
+                    <div class="brand-asset-content">
+                        <h2>${t('infraHeading')}</h2>
+                        <div class="subtitle">${t('infraSubtitle')}</div>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <i class="fa-solid fa-industry stat-icon"></i>
+                                <div class="stat-number">2</div>
+                                <div class="stat-label">${t('infraFactories')}</div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fa-solid fa-user-group stat-icon"></i>
+                                <div class="stat-number">450+</div>
+                                <div class="stat-label">${t('infraEmployees')}</div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fa-solid fa-vector-square stat-icon"></i>
+                                <div class="stat-number">100,000</div>
+                                <div class="stat-label">${t('infraSqFt')}</div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fa-solid fa-boxes-stacked stat-icon"></i>
+                                <div class="stat-number">5+</div>
+                                <div class="stat-label">${t('infraProdLines')}</div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fa-solid fa-ship stat-icon"></i>
+                                <div class="stat-number">200+</div>
+                                <div class="stat-label">${t('infraContainer')}</div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fa-solid fa-box-open stat-icon"></i>
+                                <div class="stat-number">200,000</div>
+                                <div class="stat-label">${t('infraAnnualUnits')}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer">
+                        <span>${t('pageLabel')} 3 ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(infraPage);
+                
+                // --- 3. RENDER PRODUCT PAGES ---
+                let currentPageNumber = 4;
+                productPages.forEach((pageProducts, pageIdx) => {
+                    const pageEl = document.createElement('div');
+                    pageEl.className = 'catalog-page';
+                    
+                    let productsHtml = '';
+                    pageProducts.forEach(prod => {
+                        const trans = productTranslations[currentLanguage]?.[prod.sku];
+                        const prodName = trans?.name || prod.name;
+                        const prodDesc = trans?.description || prod.description;
+                        
+                        let collectionVal = '';
+                        if (prod.sku.includes('LITE')) {
+                            collectionVal = t('prodCollLiting');
+                        } else if (prod.name.includes('Table')) {
+                            collectionVal = t('prodCollMarble');
+                        } else {
+                            collectionVal = t('prodCollColonial');
+                        }
+                        
+                        productsHtml += `
+                              <div class="product-row">
+                                  <div class="product-image-container" onclick="openLightbox('${prod.image_path}', '${prodName}')" style="cursor: pointer;">
+                                      <img src="${prod.image_path}" alt="${prodName}" class="product-image main-image" loading="lazy">
+                                      ${prod.image_hover_path ? `<img src="${prod.image_hover_path}" alt="${prodName} Alternate View" class="product-image hover-image" loading="lazy">` : ''}
+                                  </div>
+                                 <div class="product-details">
+                                     <span class="product-sku">${prod.sku}</span>
+                                     <h3 class="product-name">${prodName}</h3>
+                                     <div class="product-divider"></div>
+                                     <div class="product-spec-grid">
+                                         <span class="spec-label">${t('prodOrigin')}:</span>
+                                         <span class="spec-value">${t('prodOriginVal')}</span>
+                                         <span class="spec-label">${t('prodCollection')}:</span>
+                                         <span class="spec-value">${collectionVal}</span>
+                                     </div>
+                                     <p class="product-description">${prodDesc}</p>
+                                     <div class="product-actions no-print" style="display: flex; justify-content: center; margin-top: 5px;">
+                                         <div class="enquire-btn-wrapper" style="width: 5.85em;">
+                                            <span class="text-span">${t('prodEnquire')}</span>
+                                            <div class="container">
+                                                <a href="mailto:info@olivermcinroy.com?subject=Inquiry%20for%20${encodeURIComponent(prodName)}%20(${encodeURIComponent(prod.sku)})" title="Email Us">
+                                                    <i class="fa-solid fa-envelope"></i>
+                                                </a>
+                                                <a href="https://wa.me/919917078766?text=Hi%2C%20I%20would%20like%20to%20inquire%20about%20${encodeURIComponent(prodName)}%20(${encodeURIComponent(prod.sku)})" target="_blank" title="WhatsApp Us">
+                                                    <i class="fa-brands fa-whatsapp"></i>
+                                                </a>
+                                            </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
+                        `;
+                    });
+                    
+                    // If the page has only 1 product, add a blank placeholder row to keep the side-by-side layout uniform
+                    if (pageProducts.length === 1) {
+                        productsHtml += `
+                            <div class="product-row" style="opacity: 0; pointer-events: none; border-right: none;">
+                                <div class="product-image-container"></div>
+                                <div class="product-details"></div>
+                            </div>
+                        `;
+                    }
+                    
+                    pageEl.innerHTML = `
+                        <div class="page-header">
+                            <span class="page-header-logo">${t('brandName')}</span>
+                            <span class="page-header-title">${t('prodTitle')}</span>
+                        </div>
+                        <div class="catalog-content">
+                            ${productsHtml}
+                        </div>
+                        <div class="page-footer">
+                            <span>${t('pageLabel')} ${currentPageNumber} ${t('pageOfLabel')} ${totalPages}</span>
+                        </div>
+                    `;
+                    catalogViewport.appendChild(pageEl);
+                    currentPageNumber++;
+                });
+
+                // --- 4. RENDER MATERIALS PAGE ---
+                const materialsPage = document.createElement('div');
+                materialsPage.className = 'catalog-page';
+                materialsPage.innerHTML = `
+                    <div class="page-header">
+                        <span class="page-header-logo">${t('brandName')}</span>
+                        <span class="page-header-title">${t('matTitle')}</span>
+                    </div>
+                    <div class="brand-asset-content">
+                        <h2>${t('matHeading')}</h2>
+                        <div class="subtitle">${t('matSubtitle')}</div>
+                        
+                        <div class="materials-grid">
+                            <div class="material-item">
+                                <h4>${t('matMetal')}</h4>
+                                <p>${t('matMetalVal')}</p>
+                            </div>
+                            <div class="material-item">
+                                <h4>${t('matStone')}</h4>
+                                <p>${t('matStoneVal')}</p>
+                            </div>
+                            <div class="material-item">
+                                <h4>${t('matGlass')}</h4>
+                                <p>${t('matGlassVal')}</p>
+                            </div>
+                            <div class="material-item">
+                                <h4>${t('matNatural')}</h4>
+                                <p>${t('matNaturalVal')}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer">
+                        <span>${t('pageLabel')} ${currentPageNumber} ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(materialsPage);
+                currentPageNumber++;
+
+                // --- 6. RENDER CLIENTS PAGE ---
+                const clientsPage = document.createElement('div');
+                clientsPage.className = 'catalog-page';
+                
+                const clientImages = [
+                    'Picture12.png', 'Picture13.png', 'Picture14.png', 'Picture15.png',
+                    'Picture16.png', 'Picture17.png', 'Picture18.png', 'Picture19.png',
+                    'Picture21.png', 'Picture22.png', 'Picture23.png'
+                ];
+                
+                let clientsGridHtml = '<div class="clients-logo-grid">';
+                clientImages.forEach(img => {
+                    let imgStyle = img === 'Picture22.png' ? 'style="filter: invert(1); transform: scale(1.6);"' : '';
+                    clientsGridHtml += `
+                        <div class="client-logo-item">
+                            <img src="Images/Clients/${img}" alt="Client Logo" loading="lazy" ${imgStyle}>
+                        </div>
+                    `;
+                });
+                clientsGridHtml += '</div>';
+
+                clientsPage.innerHTML = `
+                    <div class="page-header">
+                        <span class="page-header-logo">${t('brandName')}</span>
+                        <span class="page-header-title">${t('clientTitle')}</span>
+                    </div>
+                    <div class="brand-asset-content">
+                        <h2>${t('clientHeading')}</h2>
+                        <div class="subtitle">${t('clientSubtitle')}</div>
+                        ${clientsGridHtml}
+                    </div>
+                    <div class="page-footer">
+                        <span>${t('pageLabel')} ${currentPageNumber} ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(clientsPage);
+                currentPageNumber++;
+
+                // --- 7. RENDER CERTIFICATIONS PAGE -----
+                const certsPage = document.createElement('div');
+                certsPage.className = 'catalog-page';
+                
+                const certImages = [
+                    'Picture24.png', 'Picture25.png', 'Picture26.png', 
+                    'Picture27.png', 'Picture28.png'
+                ];
+                
+                let certsGridHtml = '<div class="certs-grid">';
+                certImages.forEach(img => {
+                    let imgStyle = img === 'Picture27.png' ? 'style="filter: invert(1);"' : '';
+                    certsGridHtml += `
+                        <div class="cert-item">
+                            <img src="Images/Certificates/${img}" alt="Certification" loading="lazy" ${imgStyle}>
+                        </div>
+                    `;
+                });
+                certsGridHtml += '</div>';
+
+                certsPage.innerHTML = `
+                    <div class="page-header">
+                        <span class="page-header-logo">${t('brandName')}</span>
+                        <span class="page-header-title">${t('certTitle')}</span>
+                    </div>
+                    <div class="brand-asset-content">
+                        <h2>${t('certHeading')}</h2>
+                        <div class="subtitle">${t('certSubtitle')}</div>
+                        ${certsGridHtml}
+                    </div>
+                    <div class="page-footer">
+                        <span>${t('pageLabel')} ${currentPageNumber} ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(certsPage);
+                currentPageNumber++;
+
+                // --- 8. RENDER CONTACT FORM PAGE ---
+                const contactPage = document.createElement('div');
+                contactPage.className = 'catalog-page';
+                contactPage.innerHTML = `
+                    <div class="page-header">
+                        <span class="page-header-logo">${t('brandName')}</span>
+                        <span class="page-header-title">${t('contactTitle')}</span>
+                    </div>
+                    <div class="contact-premium-layout">
+                        <div class="contact-left">
+                            <div class="contact-header-block">
+                                <h2 class="contact-main-title">${t('contactHeading')}</h2>
+                                <div class="contact-title-line"></div>
+                                <p class="contact-subtitle">${t('contactSubtitle')}</p>
+                            </div>
+                            
+                            <form class="contact-premium-form" onsubmit="handleContactSubmit(event)">
+                                <div class="premium-form-row">
+                                    <div class="premium-form-group">
+                                        <label for="contactName">${t('contactLabelName')}</label>
+                                        <input type="text" id="contactName" name="name" required placeholder="${t('contactPlaceholderName')}">
+                                    </div>
+                                    <div class="premium-form-group">
+                                        <label for="contactEmail">${t('contactLabelEmail')}</label>
+                                        <input type="email" id="contactEmail" name="email" required placeholder="${t('contactPlaceholderEmail')}">
+                                    </div>
+                                </div>
+                                <div class="premium-form-group">
+                                    <label for="contactMessage">${t('contactLabelMessage')}</label>
+                                    <textarea id="contactMessage" name="message" rows="4" required placeholder="${t('contactPlaceholderMsg')}"></textarea>
+                                </div>
+                                <button type="submit" class="premium-submit-btn">${t('contactSubmitBtn')}</button>
+                            </form>
+                        </div>
+                        
+                        <div class="contact-right">
+                            <div class="map-wrapper">
+                                <div class="map-frame">
+                                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3493.2893861856187!2d78.7246836!3d28.8897475!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390afede7aaaaaab%3A0xabf6c75776458bca!2sOliver%20McInroy%20%26%20Co.!5e0!3m2!1sen!2sin!4v1716300000000!5m2!1sen!2sin" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                                </div>
+                                <div class="map-pin-overlay">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                            </div>
+                            <div class="address-block">
+                                <div class="address-icon">
+                                    <i class="fa-solid fa-map-marker-alt"></i>
+                                </div>
+                                <div class="address-text">
+                                    <h4>${t('contactWorkshop')}</h4>
+                                    <p>${t('contactAddress')}</p>
+                                </div>
+                            </div>
+                            <div class="contact-details-block">
+                                <div class="contact-detail-item">
+                                    <i class="fa-solid fa-envelope"></i>
+                                    <a href="mailto:info@olivermcinroy.com">info@olivermcinroy.com</a>
+                                </div>
+                                <div class="contact-detail-item">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                    <a href="https://wa.me/919917078766" target="_blank">+91 9917078766</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="page-footer">
+                        <span>${t('pageLabel')} ${currentPageNumber} ${t('pageOfLabel')} ${totalPages}</span>
+                    </div>
+                `;
+                catalogViewport.appendChild(contactPage);
+
+                if (isPresentationMode) {
+                    updatePresentationView();
+                }
+            }
+            
+            // Set up search filter logic
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query === '') {
+                    currentFilteredItems = window.catalogData || [];
+                } else {
+                    currentFilteredItems = (window.catalogData || []).filter(item => {
+                        const trans = productTranslations[currentLanguage]?.[item.sku];
+                        const name = (trans?.name || item.name).toLowerCase();
+                        const desc = (trans?.description || item.description).toLowerCase();
+                        const sku = item.sku.toLowerCase();
+                        return name.includes(query) || sku.includes(query) || desc.includes(query) ||
+                               item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query);
+                    });
+                }
+                
+                renderCatalog(currentFilteredItems);
+            });
+
+            // Bind click listeners for Controls
+            const pdfBtn = document.getElementById('pdfBtn');
+            if (pdfBtn) {
+                pdfBtn.addEventListener('click', () => {
+                    window.print();
+                });
+            }
+
+            const presentationBtn = document.getElementById('presentationBtn');
+            if (presentationBtn) {
+                presentationBtn.addEventListener('click', () => {
+                    if (isPresentationMode) {
+                        exitPresentation();
+                    } else {
+                        enterPresentation();
+                    }
+                });
+            }
+
+            const langSelect = document.getElementById('langSelect');
+            if (langSelect) {
+                langSelect.addEventListener('change', (e) => {
+                    currentLanguage = e.target.value;
+                    updateUIForLanguage();
+                    renderCatalog(currentFilteredItems);
+                });
+            }
+
+            const presPrevBtn = document.getElementById('presPrevBtn');
+            if (presPrevBtn) presPrevBtn.addEventListener('click', prevPresentationPage);
+
+            const presNextBtn = document.getElementById('presNextBtn');
+            if (presNextBtn) presNextBtn.addEventListener('click', nextPresentationPage);
+
+            const presExitBtn = document.getElementById('presExitBtn');
+            if (presExitBtn) presExitBtn.addEventListener('click', exitPresentation);
+
+            // --- LIGHTBOX INTERACTIVE ZOOM & PAN LISTENERS ---
+            const lightboxImage = document.getElementById('lightboxImage');
+
+            // Mouse dragging to pan
+            lightboxImage.addEventListener('mousedown', (e) => {
+                if (zoomLevel > 1) {
+                    isDragging = true;
+                    startX = e.clientX - panX;
+                    startY = e.clientY - panY;
+                    lightboxImage.style.cursor = 'grabbing';
+                    e.preventDefault();
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    panX = e.clientX - startX;
+                    panY = e.clientY - startY;
+                    
+                    const maxPan = (zoomLevel - 1) * 350;
+                    panX = Math.max(-maxPan, Math.min(maxPan, panX));
+                    panY = Math.max(-maxPan, Math.min(maxPan, panY));
+                    
+                    updateImageTransform();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    lightboxImage.style.cursor = zoomLevel > 1 ? 'grab' : 'zoom-in';
+                }
+            });
+
+            lightboxImage.addEventListener('wheel', (e) => {
+                if (document.getElementById('imageLightbox').classList.contains('active')) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) {
+                        zoomIn();
+                    } else {
+                        zoomOut();
+                    }
+                }
+            }, { passive: false });
+
+            lightboxImage.addEventListener('dblclick', (e) => {
+                e.stopPropagation();
+                if (zoomLevel > 1) {
+                    resetZoomState();
+                } else {
+                    zoomLevel = 2.5;
+                    updateImageTransform();
+                    lightboxImage.style.cursor = 'grab';
+                }
+            });
+            
+            // Initial render
+            if (window.catalogData) {
+                renderCatalog(window.catalogData);
+            } else {
+                catalogViewport.innerHTML = '<div style="text-align:center; padding: 40px;">Error: Catalog data not found.</div>';
+            }
+
+            // Contact form handler
+            window.handleContactSubmit = function(e) {
+                e.preventDefault();
+                const form = e.target;
+                const name = form.querySelector('#contactName').value;
+                const email = form.querySelector('#contactEmail').value;
+                const message = form.querySelector('#contactMessage').value;
+                
+                const subject = encodeURIComponent(`Enquiry from ${name}`);
+                const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+                
+                window.location.href = `mailto:info@olivermcinroy.com?subject=${subject}&body=${body}`;
+            };
+        });
+    </script>
+
+    <!-- Lightbox Modal container -->
+    <div id="imageLightbox" class="lightbox no-print" onclick="closeLightbox(event)">
+        <button class="lightbox-close" onclick="closeLightbox(event)">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img id="lightboxImage" class="lightbox-content" src="" alt="Enlarged Product Image" onclick="event.stopPropagation()">
+    </div>
+
+    <!-- Presentation Mode Floating controls -->
+    <div id="presentationControls" class="presentation-controls no-print">
+        <button id="presPrevBtn" class="pres-btn"><i class="fa-solid fa-chevron-left"></i></button>
+        <span id="presPageNum">1 / 10</span>
+        <button id="presNextBtn" class="pres-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        <button id="presExitBtn" class="pres-btn exit-pres-btn" title="Exit Presentation"><i class="fa-solid fa-compress"></i></button>
+    </div>
+</body>
+</html>

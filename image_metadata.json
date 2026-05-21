@@ -1,0 +1,90 @@
+[
+  {
+    "original_name": "Picture1.jpg",
+    "processed_name": "Picture1.jpg",
+    "width": 362,
+    "height": 842,
+    "size": 105582,
+    "hash": "01a73e6060809f84dedd33b50c586cc9"
+  },
+  {
+    "original_name": "Picture10.png",
+    "processed_name": "Picture10.png",
+    "width": 176,
+    "height": 365,
+    "size": 62130,
+    "hash": "273237d5aa6bab18bd55b96b7392c344"
+  },
+  {
+    "original_name": "Picture11.jpg",
+    "processed_name": "Picture11.jpg",
+    "width": 163,
+    "height": 464,
+    "size": 13956,
+    "hash": "aef0503852fff25e96f793a3d3d2446f"
+  },
+  {
+    "original_name": "Picture2.jpg",
+    "processed_name": "Picture2.jpg",
+    "width": 297,
+    "height": 364,
+    "size": 8777,
+    "hash": "f0f6a44376f2502000bc19ae42487286"
+  },
+  {
+    "original_name": "Picture3.jpg",
+    "processed_name": "Picture3.jpg",
+    "width": 337,
+    "height": 465,
+    "size": 15889,
+    "hash": "7f0d6bcb558848ce20611d486a03ae81"
+  },
+  {
+    "original_name": "Picture4.jpg",
+    "processed_name": "Picture4.jpg",
+    "width": 377,
+    "height": 364,
+    "size": 34825,
+    "hash": "f8c6db9d33680acbb19099d451dbb1f0"
+  },
+  {
+    "original_name": "Picture5.jpg",
+    "processed_name": "Picture5.jpg",
+    "width": 449,
+    "height": 697,
+    "size": 25247,
+    "hash": "f2ca90d331d427e99fe73775b6add52e"
+  },
+  {
+    "original_name": "Picture6.png",
+    "processed_name": "Picture6.png",
+    "width": 339,
+    "height": 366,
+    "size": 119475,
+    "hash": "bff36d0ac599cdf0eef0739dbd4a0cfb"
+  },
+  {
+    "original_name": "Picture7.png",
+    "processed_name": "Picture7.png",
+    "width": 272,
+    "height": 464,
+    "size": 117248,
+    "hash": "c665dd010f6986993cdadd8a255713b2"
+  },
+  {
+    "original_name": "Picture8.png",
+    "processed_name": "Picture8.png",
+    "width": 227,
+    "height": 366,
+    "size": 107689,
+    "hash": "ad493fd8578d25c6f10586ea0e6838fa"
+  },
+  {
+    "original_name": "Picture9.jpg",
+    "processed_name": "Picture9.jpg",
+    "width": 346,
+    "height": 464,
+    "size": 14716,
+    "hash": "38e2caa247f95ab7c054b6b7ee4e8b9b"
+  }
+]
